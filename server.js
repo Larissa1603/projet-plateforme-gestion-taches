@@ -1,17 +1,24 @@
-require('dotenv').config();
-const express = require('express');
-const sequelize = require('./config/db');
-const authRoutes = require('./routes/auth');
+import db from './models/index.js';
+import bcrypt from 'bcrypt';
 
-const app = express();
-app.use(express.json());
-app.use('/api/auth', authRoutes);
+const { Role, User } = db;
 
-const PORT = process.env.PORT || 3000;
+async function seed() {
+  await db.sequelize.sync({ force: true });
 
-sequelize.sync({ alter: true }).then(() => {
-  console.log('DB syncée');
-  app.listen(PORT, () => {
-    console.log(`API en marche sur http://localhost:${PORT}`);
+  const adminRole = await Role.create({ name: 'admin' });
+  const userRole = await Role.create({ name: 'user' });
+
+  await User.create({
+    email: 'admin@example.com',
+    password: await bcrypt.hash('password', 10),
+    roleId: adminRole.id
   });
-});
+
+  // Ajoutez des données pour Projects, Tasks, etc.
+
+  console.log('Seed completed');
+  process.exit();
+}
+
+seed();

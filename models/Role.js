@@ -1,5 +1,5 @@
-module.exports = (sequelize, DataTypes) => {
+export default (sequelize, DataTypes) => {
   return sequelize.define('Role', {
-    name: { type: DataTypes.STRING(50), unique: true, allowNull: false }
+    nom: { type: DataTypes.STRING(50), unique: true, allowNull: false }
   });
 };

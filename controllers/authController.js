@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import db from '../models/index.js';
+import db from '../index.js';
 
 const { Utilisateur, Role } = db;
 

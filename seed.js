@@ -20,5 +20,4 @@ async function seed() {
   console.log('Seed completed');
   process.exit();
 }
-
 seed();

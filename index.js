@@ -1,7 +1,7 @@
-import sequelize from '../config/db.js';
+import sequelize from './config/db.js';
 import { DataTypes } from 'sequelize';
 
-import defineRole from './Role.js';
+import defineRole from './models/Role.js';
 import defineUtilisateur from './Utilisateur.js';
 import defineProjet from './Projet.js';
 import defineTache from './Tache.js';

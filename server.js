@@ -1,24 +1,16 @@
+import express from 'express';
 import db from './models/index.js';
-import bcrypt from 'bcrypt';
+import userRoutes from './routes/userRoutes.js';
+// Importez les autres routes
 
-const { Role, User } = db;
+const app = express();
+app.use(express.json());
 
-async function seed() {
-  await db.sequelize.sync({ force: true });
+app.use('/api/users', userRoutes);
+// app.use('/api/projects', projectRoutes); etc.
 
-  const adminRole = await Role.create({ name: 'admin' });
-  const userRole = await Role.create({ name: 'user' });
+const PORT = process.env.PORT || 3000;
 
-  await User.create({
-    email: 'admin@example.com',
-    password: await bcrypt.hash('password', 10),
-    roleId: adminRole.id
-  });
-
-  // Ajoutez des données pour Projects, Tasks, etc.
-
-  console.log('Seed completed');
-  process.exit();
-}
-
-seed();
+db.sequelize.sync({ alter: true }).then(() => {
+  app.listen(PORT, () => console.log(`Server on port ${PORT}`));
+}).catch(err => console.error(err));

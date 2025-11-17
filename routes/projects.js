@@ -1,21 +1,31 @@
-// const express = require('express');
-// const router = express.Router();
-// const projectCtrl = require('../controllers/projectController');
-
-// router.get('/', projectCtrl.getProjects);
-// router.post('/', projectCtrl.createProject);
-
-// module.exports = router;
-
-
-const express = require('express');
+import express from 'express';
+import { getAllProjects, createProject, updateProject, deleteProject, getProjectById } from '../controllers/projectController.js';
+import { body, param, query } from 'express-validator';
+import validate from '../middlewares/validate.js';
+import { verifyToken } from '../middlewares/auth.js';
+ 
 const router = express.Router();
-const projectController = require('../controllers/projectController');
-
-// GET tous les projets
-router.get('/', projectController.getAllProjects);
-
-// POST créer un projet
-router.post('/', projectController.createProject);
-
-module.exports = router;
+ 
+router.get('/', verifyToken, [
+  query('page').optional().isInt({ min: 1 }).withMessage('Invalid page'),
+  query('limit').optional().isInt({ min: 1 }).withMessage('Invalid limit')
+], validate, getAllProjects);
+ 
+router.get('/:id', verifyToken, [
+  param('id').isInt().withMessage('Invalid ID')
+], validate, getProjectById);
+ 
+router.post('/', verifyToken, [
+  body('name').notEmpty().withMessage('Name required')
+], validate, createProject);
+ 
+router.put('/:id', verifyToken, [
+  param('id').isInt().withMessage('Invalid ID'),
+  body('name').optional().notEmpty()
+], validate, updateProject);
+ 
+router.delete('/:id', verifyToken, [
+  param('id').isInt().withMessage('Invalid ID')
+], validate, deleteProject);
+ 
+export default router;

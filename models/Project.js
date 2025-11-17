@@ -1,13 +1,11 @@
-const mongoose = require('mongoose');
-
-const projectSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  description: { type: String }
-});
-
-module.exports = mongoose.model('Project', projectSchema);
-
-
+export default (sequelize, DataTypes) => {
+  return sequelize.define('Project', {
+    name: { type: DataTypes.STRING, allowNull: false },
+    description: { type: DataTypes.TEXT },
+    startDate: { type: DataTypes.DATE },
+    endDate: { type: DataTypes.DATE }
+  });
+};
 
 
 

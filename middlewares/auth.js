@@ -1,18 +1,18 @@
-const jwt = require('jsonwebtoken');
-const { User, Role } = require('../models');
-require('dotenv').config();
-
-async function authenticate(req, res, next) {
-  const header = req.headers.authorization;
-  if (!header || !header.startsWith('Bearer ')) return res.status(401).json({ message: 'Token manquant' });
-  try {
-    const token = header.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findByPk(decoded.id, { include: Role });
-    if (!user) return res.status(401).json({ message: 'Utilisateur non trouvé' });
-    req.user = user;
+import jwt from 'jsonwebtoken';
+ 
+export const verifyToken = (req, res, next) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) return res.status(403).json({ message: 'No token provided' });
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(401).json({ message: 'Unauthorized' });
+    req.userId = decoded.id;
+    req.userRole = decoded.role;
     next();
-  } catch (err) { res.status(401).json({ message: 'Token invalide' }); }
-}
+  });
+};
+ 
+export const isAdmin = (req, res, next) => {
+  if (req.userRole !== 'admin') return res.status(403).json({ message: 'Admin required' });
+  next();
+};
 
-module.exports = { authenticate };

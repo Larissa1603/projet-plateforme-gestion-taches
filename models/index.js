@@ -1,10 +1,29 @@
-const sequelize = require('../config/db');
-const { DataTypes } = require('sequelize');
+import sequelize from '../config/db.js';
+import { DataTypes } from 'sequelize';
 
-const Role = require('./Role')(sequelize, DataTypes);
-const User = require('./User')(sequelize, DataTypes);
+import defineRole from './Role.js';
+import defineUtilisateur from './Utilisateur.js';
+import defineProjet from './Projet.js';
+import defineTache from './Tache.js';
+import defineCommentaire from './Commentaire.js';
+import defineAffectation from './Affectation.js';
 
-Role.hasMany(User);
-User.belongsTo(Role);
+const Role = defineRole(sequelize, DataTypes);
+const Utilisateur = defineUtilisateur(sequelize, DataTypes);
+const Projet = defineProjet(sequelize, DataTypes);
+const Tache = defineTache(sequelize, DataTypes);
+const Commentaire = defineCommentaire(sequelize, DataTypes);
+const Affectation = defineAffectation(sequelize, DataTypes);
 
-module.exports = { sequelize, Role, User };
+// Relations
+Role.hasMany(Utilisateur, { foreignKey: 'role_id' });
+Utilisateur.belongsTo(Role, { foreignKey: 'role_id' });
+Projet.hasMany(Tache, { foreignKey: 'projet_id' });
+Tache.belongsTo(Projet, { foreignKey: 'projet_id' });
+Tache.hasMany(Commentaire, { foreignKey: 'tache_id' });
+Commentaire.belongsTo(Tache, { foreignKey: 'tache_id' });
+Commentaire.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
+Tache.belongsToMany(Utilisateur, { through: Affectation, foreignKey: 'tache_id' });
+Utilisateur.belongsToMany(Tache, { through: Affectation, foreignKey: 'utilisateur_id' });
+
+export default { sequelize, Role, Utilisateur, Projet, Tache, Commentaire, Affectation };

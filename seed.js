@@ -1,18 +1,23 @@
-const { sequelize, Role, User } = require('./models');
-const bcrypt = require('bcrypt');
+import db from './models/index.js';
+import bcrypt from 'bcrypt';
+
+const { Role, User } = db;
 
 async function seed() {
-  await sequelize.sync({ force: true });
+  await db.sequelize.sync({ force: true });
+
   const adminRole = await Role.create({ name: 'admin' });
-  const hashed = await bcrypt.hash('123456', 10);
+  const userRole = await Role.create({ name: 'user' });
+
   await User.create({
-    email: 'admin@taches.com',
-    password: hashed,
-    name: 'Admin',
+    email: 'admin@example.com',
+    password: await bcrypt.hash('password', 10),
     roleId: adminRole.id
   });
-  console.log('SEED OK ! Admin: admin@taches.com / 123456');
+
+  // Ajoutez des données pour Projects, Tasks, etc.
+
+  console.log('Seed completed');
   process.exit();
 }
-
 seed();

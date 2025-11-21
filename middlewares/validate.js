@@ -1,7 +1,16 @@
-import { validationResult } from 'express-validator';
-
-export default (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  next();
+export default (sequelize, DataTypes) => {
+  return sequelize.define(
+    'Role',
+    {
+      name: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+        unique: true,
+      },
+    },
+    {
+      tableName: 'roles', // optional but cleaner
+      timestamps: false, // if you don’t have createdAt / updatedAt
+    }
+  );
 };

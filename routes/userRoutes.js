@@ -1,24 +1,23 @@
 import express from 'express';
-import { login } from '../controllers/authController.js';
+//import { getUsers, createUser, login } from '../controllers/userController.js';
 import { body } from 'express-validator';
-import validate from '../middlewares/validate.js';
+//import auth from '../middleware/auth.js';
+import { createUser, getUsers, login } from '../controllers/userControllers.js';
+import auth from '../middlewares/auth.js';
 
 const router = express.Router();
 
-router.post('/login', [
-  body('email').isEmail().normalizeEmail(),
-  body('password').isLength({ min: 6 })
-], validate, login);
-router.get('/', verifyToken, [
-  query('page').optional().isInt({ min: 1 }),
-  query('limit').optional().isInt({ min: 1 })
-], validate, getAllUsers);
-
-router.post('/', verifyToken, isAdmin, [
+router.post(
+  '/register',
+  body('name').notEmpty(),
   body('email').isEmail(),
   body('password').isLength({ min: 6 }),
-  body('roleId').isInt()
-], validate, createUser);
+  createUser
+);
 
-// Ajoutez PUT/:id, DELETE/:id, GET/:id avec validations et auth.
+router.post('/login', body('email').isEmail(), body('password').notEmpty(), login);
+
+router.get('/', getUsers); // JWT protection
+
 export default router;
+

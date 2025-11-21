@@ -1,29 +1,30 @@
-import sequelize from '../config/db.js';
-import { DataTypes } from 'sequelize';
+// //import Sequelize from 'sequelize';
+// import db from '../config/db.js';
+// import defineUser from './user.js';
+// import defineRole from './role.js';
 
-import defineRole from './Role.js';
-import defineUtilisateur from './Utilisateur.js';
-import defineProjet from './Projet.js';
-import defineTache from './Tache.js';
-import defineCommentaire from './Commentaire.js';
-import defineAffectation from './Affectation.js';
+// //const sequelize = new Sequelize(dbConfig);
 
-const Role = defineRole(sequelize, DataTypes);
-const Utilisateur = defineUtilisateur(sequelize, DataTypes);
-const Projet = defineProjet(sequelize, DataTypes);
-const Tache = defineTache(sequelize, DataTypes);
-const Commentaire = defineCommentaire(sequelize, DataTypes);
-const Affectation = defineAffectation(sequelize, DataTypes);
+// const models = {};
+// models.Role = defineRole(sequelize, Sequelize.DataTypes);
+// models.User = defineUser(sequelize, Sequelize.DataTypes);
 
-// Relations
-Role.hasMany(Utilisateur, { foreignKey: 'role_id' });
-Utilisateur.belongsTo(Role, { foreignKey: 'role_id' });
-Projet.hasMany(Tache, { foreignKey: 'projet_id' });
-Tache.belongsTo(Projet, { foreignKey: 'projet_id' });
-Tache.hasMany(Commentaire, { foreignKey: 'tache_id' });
-Commentaire.belongsTo(Tache, { foreignKey: 'tache_id' });
-Commentaire.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
-Tache.belongsToMany(Utilisateur, { through: Affectation, foreignKey: 'tache_id' });
-Utilisateur.belongsToMany(Tache, { through: Affectation, foreignKey: 'utilisateur_id' });
+// // Setup associations
+// Object.keys(models).forEach((modelName) => {
+//   if (models[modelName].associate) {
+//     models[modelName].associate(models);
+//   }
+// });
 
-export default { sequelize, Role, Utilisateur, Projet, Tache, Commentaire, Affectation };
+// models.sequelize = sequelize;
+// models.Sequelize = Sequelize;
+
+// export default models;
+
+import User from './User.js';
+import Role from './Role.js';   
+
+User.belongsToMany(Role, { through: 'UserRoles', foreignKey: 'userId' });
+Role.belongsToMany(User, { through: 'UserRoles', foreignKey: 'roleId' });
+
+export {User, Role };

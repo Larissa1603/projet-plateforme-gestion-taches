@@ -2,22 +2,36 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import db from '../index.js';
 
-const { Utilisateur, Role } = db;
+const { User, Role } = db;
 
 export const login = async (req, res) => {
-  const { email, mot_de_passe } = req.body; // Adapté en français
+  const { email, password } = req.body;
+
   try {
-    const utilisateur = await Utilisateur.findOne({ where: { email }, include: Role });
-    if (!utilisateur || !(await bcrypt.compare(mot_de_passe, utilisateur.mot_de_passe))) {
-      return res.status(401).json({ error: 'Identifiants incorrects' });
+    const user = await User.findOne({
+      where: { email: email.toLowerCase() },
+      include: Role
+    });
+
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
+
     const token = jwt.sign(
-      { id: utilisateur.id, role: utilisateur.Role.nom },
+      { id: user.id, role: user.Role.name },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
-    res.json({ token, utilisateur: { email: utilisateur.email, role: utilisateur.Role.nom } });
+
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.Role.name
+      }
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Server error. Please try again later.' });
   }
 };

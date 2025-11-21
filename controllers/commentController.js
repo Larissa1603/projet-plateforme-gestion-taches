@@ -3,7 +3,7 @@ import { validationResult } from 'express-validator';
  
 const { Comment, Task, User } = db;
  
-// GET all comments (with pagination and includes)
+// GET all comments
 export const getAllComments = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -81,4 +81,5 @@ export const getCommentById = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 

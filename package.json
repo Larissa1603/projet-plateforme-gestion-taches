@@ -1,0 +1,8 @@
+{
+  "type": "module",
+  "dependencies": {
+    "express": "^4.18.2",
+    "sequelize": "^6.37.1",
+    "mysql2": "^3.6.0"
+  }
+}

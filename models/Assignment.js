@@ -1,6 +1,19 @@
-export default (sequelize, DataTypes) => {
-  return sequelize.define('Assignment', {
-    taskId: { type: DataTypes.INTEGER, allowNull: false }, // FK to Task (from Member 3)
-    userId: { type: DataTypes.INTEGER, allowNull: false }  // FK to User (from Member 1)
+// models/Assignment.js
+import { DataTypes } from "sequelize";
+
+export default (sequelize) => {
+  return sequelize.define("Assignment", {
+    task: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    assignee: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    projectId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    }
   });
 };

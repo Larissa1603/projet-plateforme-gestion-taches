@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentification - TASK MANAGER </title>
+    <style>
+        /*  CSS AUTHENTIFICATION  */
+        :root {
+            --bg-dark: #ffffff;
+            --bg-panel: #ffffff;
+            --text-color: rgb(0, 0, 0);
+            --accent-blue: rgb(0, 0, 0);
+            --accent-red: rgb(221, 175, 175);
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--text-color);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .auth-container {
+            background: var(--bg-panel);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(199, 191, 191, 0.7);
+            width: 100%;
+            max-width: 350px;
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--accent-blue);
+            margin-bottom: 25px;
+        }
+
+        /* Styles des formulaires */
+        .auth-form-wrapper {
+            position: relative;
+            /* Hauteur ajustée pour les 5 champs d'inscription */
+            height: 350px; 
+        }
+
+        .auth-form {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            transition: opacity 0.4s, transform 0.4s;
+            padding: 0;
+        }
+        
+        /* Styles pour masquer le formulaire inactif  */
+        .auth-form.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(100%);
+        }
+        .auth-form.login {
+            transform: translateX(0);
+        }
+        .auth-form.signup {
+            transform: translateX(-100%);
+        }
+        .auth-form.active {
+             transform: translateX(0) !important;
+             opacity: 1;
+        }
+
+
+        input[type="text"], input[type="email"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            border: 1px solid #666;
+            background: #ffffff;
+            color: var(--text-color);
+            border-radius: 4px;
+        }
+
+        /* Bouton principal */
+        .btn-submit {
+            width: 100%;
+            padding: 10px;
+            background: var(--accent-blue);
+            color: rgb(255, 251, 251);
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .btn-submit:hover {
+            opacity: 0.9;
+        }
+
+        .toggle-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+        .toggle-link a {
+            color: var(--accent-blue);
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        
+        .feedback { 
+            padding: 10px; 
+            margin: 10px 0; 
+            font-weight: bold; 
+            text-align: center;
+            display: none;
+        }
+        .feedback.error { background: #442222; color: #ffa2a2; border: 1px solid var(--accent-red); }
+        .feedback.success { background: #224422; color: #adffa2; border: 1px solid green; }
+    </style>
+</head>
+<body>
+
+<div class="auth-container">
+    <h2 id="auth-title">Connexion</h2>
+    
+    <div id="feedbackZone" class="feedback"></div>
+
+    <div class="auth-form-wrapper">
+        
+        <form id="loginForm" class="auth-form login active">
+            <input type="email" id="login-email" placeholder="Email" required>
+            <input type="password" id="login-password" placeholder="Mot de passe" required>
+            <button type="submit" class="btn-submit">Se Connecter</button>
+        </form>
+
+        <form id="signupForm" class="auth-form signup hidden">
+            <input type="text" id="signup-name" placeholder="Nom" required>
+            <input type="text" id="signup-firstname" placeholder="Prénom" required>
+            <input type="email" id="signup-email" placeholder="Email" required>
+            <input type="password" id="signup-password" placeholder="Mot de passe" required>
+            <input type="password" id="signup-confirm-password" placeholder="Confirmer Mot de passe" required>
+            <button type="submit" class="btn-submit">S'Inscrire</button>
+        </form>
+
+    </div>
+
+    <div class="toggle-link">
+        <span id="toggleText">Pas de compte ?</span>
+        <a id="toggleAuthMode">S'inscrire</a>
+    </div>
+
+</div>
+
+<script>
+
+    /* JAVASCRIPT AUTHENTIFICATION */
+    
+    // SÉLECTEURS
+    const titleEl = document.getElementById('auth-title');
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const toggleLink = document.getElementById('toggleAuthMode');
+    const toggleText = document.getElementById('toggleText');
+    const feedbackEl = document.getElementById('feedbackZone');
+
+    // ÉTATS
+    let isLoginMode = true;
+    
+    // CONSTANTES
+    const localStorageKey = 'user_data_task_manager';
+    // MODIFICATION CLÉ : Redirige vers le fichier de l'application index.html
+    const redirectPage = 'index.html'; 
+    
+   
+
+    function showMessage(text, type) {
+        feedbackEl.textContent = text;
+        feedbackEl.className = `feedback ${type}`;
+        feedbackEl.style.display = 'block';
+        setTimeout(() => feedbackEl.style.display = 'none', 4000);
+    }
+
+    function loadUsers() {
+        const data = localStorage.getItem(localStorageKey);
+        try {
+            return data ? JSON.parse(data) : [];
+        } catch (e) {
+            console.error("Données utilisateurs corrompues", e);
+            return [];
+        }
+    }
+
+    function saveUsers(users) {
+        localStorage.setItem(localStorageKey, JSON.stringify(users));
+    }
+
+    
+
+    function toggleAuthMode() {
+        isLoginMode = !isLoginMode;
+
+        if (isLoginMode) {
+            titleEl.textContent = 'Connexion';
+            toggleText.textContent = 'Pas de compte ?';
+            toggleLink.textContent = "S'inscrire";
+
+            loginForm.classList.add('active');
+            loginForm.classList.remove('hidden');
+            signupForm.classList.remove('active');
+            signupForm.classList.add('hidden');
+            
+        } else {
+            titleEl.textContent = 'Inscription';
+            toggleText.textContent = 'Déjà un compte ?';
+            toggleLink.textContent = 'Se connecter';
+
+            loginForm.classList.remove('active');
+            loginForm.classList.add('hidden');
+            signupForm.classList.add('active');
+            signupForm.classList.remove('hidden');
+        }
+        feedbackEl.style.display = 'none';
+    }
+
+    //  LOGIQUE DE SOUMISSION
+
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value.trim();
+        const users = loadUsers();
+
+        const user = users.find(u => u.email === email && u.password === password);
+
+        if (user) {
+            // Succès: Enregistrer l'état de connexion et rediriger vers index.html
+            localStorage.setItem('currentUser', JSON.stringify({ name: user.name, firstname: user.firstname, email: user.email }));
+            showMessage("Connexion réussie ! Redirection...", "success");
+            setTimeout(() => window.location.href = redirectPage, 1500);
+        } else {
+            showMessage("Erreur : Email ou mot de passe incorrect.", "error");
+        }
+    });
+
+    signupForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const name = document.getElementById('signup-name').value.trim();
+        const firstname = document.getElementById('signup-firstname').value.trim();
+        const email = document.getElementById('signup-email').value.trim();
+        const password = document.getElementById('signup-password').value.trim();
+        const confirmPassword = document.getElementById('signup-confirm-password').value.trim();
+
+        if (password !== confirmPassword) {
+            showMessage("Erreur : Les mots de passe ne correspondent pas.", "error");
+            return;
+        }
+        
+        if (password.length < 6) {
+             showMessage("Erreur : Le mot de passe doit contenir au moins 6 caractères.", "error");
+            return;
+        }
+
+        const users = loadUsers();
+
+        if (users.find(u => u.email === email)) {
+            showMessage("Erreur : Cet email est déjà utilisé.", "error");
+            return;
+        }
+
+        const newUser = { name, firstname, email, password };
+        users.push(newUser);
+        saveUsers(users);
+
+        // Connexion automatique après inscription vers index.html
+        localStorage.setItem('currentUser', JSON.stringify({ name, firstname, email }));
+        showMessage("Inscription réussie ! Redirection...", "success");
+        setTimeout(() => window.location.href = redirectPage, 1500);
+    });
+
+
+    toggleLink.addEventListener('click', toggleAuthMode);
+</script>
+
+</body>
+</html>

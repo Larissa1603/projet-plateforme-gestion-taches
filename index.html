@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Tâches PRO</title>
+    <style>
+        /* === CSS (STYLE) === */
+        :root {
+            --bg-dark: #feffff;
+            --bg-panel: #f3fdff;
+            --text-color: rgb(0, 0, 0);
+            --accent-blue: rgb(245, 245, 245);
+            --accent-red: rgb(219, 140, 140);
+            --accent-green: #e2e2e2; 
+            --accent-yellow: #ffffff;
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--text-color);
+            font-family: 'Courier New', Courier, monospace;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .wrapper {
+            max-width: 1200px; 
+            margin: 0 auto;
+            background: var(--bg-panel);
+            padding: 20px;
+            border: 1px solid #615353;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        h1, h2, h3 { margin-top: 0; }
+        
+        /* En-tête de l'application pour afficher le nom de l'utilisateur et le bouton de déconnexion */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+        }
+        .user-info {
+            font-size: 1em;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logout-btn {
+            padding: 8px 15px;
+            background: #d9534f; /* Couleur rouge foncée pour déconnexion */
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+
+        /* === SECTION FORMULAIRE (ALIGNEMENT HORIZONTAL) === */
+        .form-panel {
+            background: #636060;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #000;
+        }
+
+        .input-row {
+            display: flex; 
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        /* Gestion de la taille des champs */
+        .grow-3 { flex: 3; } 
+        .grow-2 { flex: 2; }
+        .grow-1 { flex: 1; }
+
+        input[type="text"], input[type="date"], select, textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box; 
+            border: 1px solid #666;
+            background: var(--bg-dark);
+            color: var(--text-color);
+        }
+        
+        /* Description séparée */
+        #descriptionInput {
+            min-height: 50px;
+            resize: vertical;
+        }
+
+        /* Message de compteur de mots (Supprimé mais conservé pour éviter de casser le style) */
+        .word-count {
+            display: none; /* CACHÉ car la fonctionnalité est supprimée */
+            text-align: right;
+            font-size: 0.8em;
+            color: #3e3a3a;
+            margin-top: 5px;
+        }
+
+        /* === BOUTONS === */
+        .btn {
+            padding: 10px 15px;
+            border: 0;
+            cursor: pointer;
+            font-weight: bold;
+            color: rgb(11, 10, 10);
+            white-space: nowrap; 
+        }
+
+        .btn-primary { background: var(--accent-blue); }
+        .btn-primary:hover { opacity: 0.9; }
+
+        .btn-action { 
+            background: #555; 
+            padding: 5px 10px; 
+            font-size: 12px;
+        }
+        .btn-action.complete { background: var(--accent-green); }
+
+        .btn-del { background: var(--accent-red); }
+
+        .btn-danger { background: var(--accent-red); }
+
+        /* === FEEDBACK (MESSAGES) === */
+        .feedback { 
+            padding: 10px; 
+            margin: 10px 0; 
+            font-weight: bold; 
+            text-align: center;
+            display: none; 
+        }
+        .feedback.success { background: #224422; color: #adffa2; border: 1px solid var(--accent-green); }
+        .feedback.error { background: #442222; color: #ffa2a2; border: 1px solid var(--accent-red); }
+
+        /* === TABLEAU === */
+        .inventory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(79, 77, 77, 0.2);
+        }
+
+        td, th {
+            border: 1px solid #777;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th { background: #ac9f9f; }
+
+        /* Styles spécifiques demandés */
+        td:first-child { color: orange; font-weight: bold; }
+        .badge { background: #eee; color: #000; padding: 2px 5px; font-size: 0.9em; }
+        .status-badge { 
+            font-weight: bold; 
+            padding: 2px 5px; 
+            border-radius: 3px; 
+            display: inline-block;
+        }
+        .status-completed { background: var(--accent-green); color: rgb(73, 70, 70); }
+        .status-pending { background: var(--accent-red); color: rgb(114, 104, 104); }
+        
+        /* Input recherche */
+        #searchInput {
+            background: var(--accent-yellow);
+            color: rgb(0, 0, 0);
+            width: 250px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <header class="app-header">
+        <h1>✅ GESTIONNAIRE DE TÂCHES PRO</h1>
+        <div class="user-info">
+            Connecté: <span id="currentUserDisplay">...</span>
+            <button id="logoutBtn" class="logout-btn">Déconnexion</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="form-panel">
+            <h3 style="margin-bottom: 10px; color: #f1eeee;">Ajouter une Tâche</h3>
+            <form id="taskForm">
+                <div class="input-row">
+                    <div class="form-group grow-3">
+                        <input type="text" id="taskNameInput" placeholder="Nom de la Tâche (Titre)" required>
+                    </div>
+                    
+                    <div class="form-group grow-1">
+                        <input type="text" id="creatorInput" placeholder="Nom du Créateur" required>
+                    </div>
+
+                    <div class="form-group grow-1">
+                        <select id="typeSelect">
+                            <option value="Critique">Critique</option>
+                            <option value="Simple">Simple</option>
+                            <option value="Optionnel">Optionnel</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group grow-1">
+                        <input type="date" id="startDateInput" title="Date de Début" required>
+                    </div>
+                    
+                    <div class="form-group grow-1">
+                        <input type="date" id="endDateInput" title="Date de Fin">
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">AJOUTER TÂCHE</button>
+                    </div>
+                </div>
+                
+                <div class="input-row" style="margin-top: 10px;">
+                    <div class="form-group grow-2">
+                        <textarea id="descriptionInput" placeholder="Description de la Tâche (aucune limite de mots imposée)"></textarea>
+                        <span id="wordCount" class="word-count"></span> 
+                    </div>
+                </div>
+
+            </form>
+        </section>
+
+        <div id="feedbackZone" class="feedback"></div>
+
+        <section class="inventory-panel">
+            <div class="inventory-header">
+                <h3>Inventaire des Tâches (<span id="countDisplay">0</span>)</h3>
+                <div>
+                    Recherche : <input type="text" id="searchInput" placeholder="Titre ou créateur...">
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">Num</th>
+                        <th style="width: 30%;">Tâche / Description</th>
+                        <th>Créateur</th>
+                        <th>Type</th>
+                        <th>Début</th>
+                        <th>Fin</th>
+                        <th style="width: 80px;">Statut</th>
+                        <th style="width: 50px;">Opt</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer>
+        <br>
+        <button id="btnReset" class="btn btn-danger"> restaurer Toutes les Tâches</button>
+    </footer>
+</div>
+
+<script>
+    /* === JAVASCRIPT === */
+
+    // **********************************************
+    // * BLOC DE SÉCURITÉ ET DE CONNEXION *
+    // **********************************************
+    
+    // REDIRECTION DE SÉCURITÉ et AFFICHAGE UTILISATEUR
+    const currentUserData = localStorage.getItem('currentUser');
+    if (!currentUserData) {
+        // MODIFICATION CLÉ : Rediriger vers la page d'authentification (auth.html) si non connecté
+        window.location.href = 'auth.html';
+    } else {
+        // Si connecté, récupérer les informations utilisateur et les afficher
+        const currentUser = JSON.parse(currentUserData);
+        const userDisplayElement = document.getElementById('currentUserDisplay');
+        if (userDisplayElement) {
+            userDisplayElement.textContent = `${currentUser.firstname} ${currentUser.name}`;
+        }
+    }
+
+    const logoutButton = document.getElementById('logoutBtn');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', () => {
+            // Vider la session et rediriger vers la page de connexion (auth.html)
+            localStorage.removeItem('currentUser');
+            window.location.href = 'auth.html'; 
+        });
+    }
+
+    // **********************************************
+    
+    // 1. CLASSE MODEL (Gestion des données)
+    class TaskManager {
+        constructor() {
+            this.storageKey = "task_manager_db_v1";
+            this.tasks = this.loadFromStorage();
+        }
+
+        loadFromStorage() {
+            const data = localStorage.getItem(this.storageKey);
+            try {
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                console.error("Données de tâches corrompues", e);
+                return [];
+            }
+        }
+
+        saveToStorage() {
+            localStorage.setItem(this.storageKey, JSON.stringify(this.tasks));
+        }
+
+        addTask(taskName, creator, type, description, startDate, endDate) {
+            const newTask = {
+                id: Date.now(), 
+                taskName: taskName,
+                creator: creator,
+                type: type,
+                description: description,
+                startDate: startDate,
+                endDate: endDate,
+                dateAdded: new Date().toLocaleDateString('fr-FR'),
+                isCompleted: false,
+                isDeleted: false 
+            };
+            this.tasks.push(newTask);
+            this.saveToStorage();
+        }
+
+        deleteTask(id) {
+            const task = this.tasks.find(t => t.id === id);
+            if (task) {
+                task.isDeleted = true;
+                this.saveToStorage();
+            }
+        }
+        
+        toggleCompletion(id) {
+            const task = this.tasks.find(t => t.id === id);
+            if (task) {
+                task.isCompleted = !task.isCompleted;
+                this.saveToStorage();
+            }
+        }
+
+        getActiveTasks() {
+            return this.tasks.filter(t => !t.isDeleted);
+        }
+
+        searchTasks(query) {
+            const lower = query.toLowerCase();
+            return this.getActiveTasks().filter(t => 
+                t.taskName.toLowerCase().includes(lower) || 
+                t.creator.toLowerCase().includes(lower) ||
+                t.description.toLowerCase().includes(lower)
+            );
+        }
+
+        deleteAll() {
+            localStorage.removeItem(this.storageKey);
+            this.tasks = [];
+        }
+    }
+
+    // 2. LOGIQUE UI (Interface Utilisateur)
+    
+    // Initialisation
+    const manager = new TaskManager();
+    const form = document.getElementById('taskForm');
+    const tableBody = document.getElementById('tableBody');
+    const countSpan = document.getElementById('countDisplay');
+    const searchInput = document.getElementById('searchInput');
+    const feedback = document.getElementById('feedbackZone');
+    
+    // Sélecteurs de champs
+    const taskNameInput = document.getElementById('taskNameInput');
+    const creatorInput = document.getElementById('creatorInput');
+    const typeSelect = document.getElementById('typeSelect');
+    const descriptionInput = document.getElementById('descriptionInput');
+    const startDateInput = document.getElementById('startDateInput');
+    const endDateInput = document.getElementById('endDateInput');
+    const wordCountSpan = document.getElementById('wordCount');
+
+
+    // Fonction d'affichage (Render)
+    function render(list = manager.getActiveTasks()) {
+        tableBody.innerHTML = "";
+        let count = 0; 
+
+        list.forEach(task => {
+            count++; 
+            
+            const isCompleted = task.isCompleted;
+            const statusText = isCompleted ? 'Terminée' : 'En Cours';
+            const statusClass = isCompleted ? 'status-completed' : 'status-pending';
+            
+            const taskNameDisplay = escapeHtml(task.taskName);
+
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>#${count}</td>
+                <td>
+                    <b>${taskNameDisplay}</b><br>
+                    <small style="display: block; margin-top: 5px;">${escapeHtml(task.description)}</small>
+                </td>
+                <td><span class="badge">${task.type}</span></td>
+                <td>${escapeHtml(task.creator)}</td>
+                <td>${task.startDate || 'N/A'}</td>
+                <td>${task.endDate || 'N/A'}</td>
+                <td><span class="${statusClass} status-badge">${statusText}</span></td>
+                <td>
+                    <button class="btn btn-action ${isCompleted ? '' : 'complete'}" 
+                        onclick="toggleStatut(${task.id})" 
+                        title="${isCompleted ? 'Marquer En Cours' : 'Marquer Terminé'}">
+                        ${isCompleted ? '↩' : '✅'}
+                    </button>
+                    <button class="btn btn-del" onclick="supprimerTache(${task.id})" style="margin-top: 5px;">X</button>
+                </td>
+            `;
+            tableBody.appendChild(tr);
+        });
+        
+        countSpan.textContent = count;
+    }
+
+    // Sécurité Anti-XSS
+    function escapeHtml(text) {
+        if (!text) return "";
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    // Fonction Message (Feedback)
+    function showMessage(text, type) {
+        feedback.textContent = text;
+        feedback.className = `feedback ${type}`;
+        feedback.style.display = 'block';
+        setTimeout(() => feedback.style.display = 'none', 3000);
+    }
+
+
+    // === ÉVÉNEMENTS ===
+
+    // 1. Soumission du formulaire
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const name = taskNameInput.value.trim();
+        const creator = creatorInput.value.trim();
+        const type = typeSelect.value;
+        const description = descriptionInput.value.trim();
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+
+        // Validation simple des champs obligatoires (Nom, Créateur, Date Début)
+        if(!name || !creator || !startDate) {
+            showMessage("Erreur : Nom de Tâche, Créateur et Date de Début sont requis.", "error");
+            return;
+        }
+
+        // Ajout
+        manager.addTask(name, creator, type, description, startDate, endDate);
+        form.reset();
+        descriptionInput.value = ''; // Reset manuellement le textarea
+        showMessage("Tâche enregistrée avec succès.", "success");
+        render();
+    });
+
+    // 2. Recherche
+    searchInput.addEventListener('keyup', (e) => {
+        const results = manager.searchTasks(e.target.value);
+        render(results);
+    });
+
+    // 3. Reset Total
+    document.getElementById('btnReset').addEventListener('click', () => {
+        if(confirm("Attention : Voulez-vous vraiment effacer TOUTES les tâches de la base de données ?")) {
+            manager.deleteAll();
+            location.reload();
+        }
+    });
+
+    // 4. Suppression (Fonction globale)
+    window.supprimerTache = function(id) {
+        if(confirm("Supprimer cette tâche ?")) {
+            manager.deleteTask(id);
+            render();
+        }
+    };
+    
+    // 5. Basculer Statut (Fonction globale)
+    window.toggleStatut = function(id) {
+        manager.toggleCompletion(id);
+        render();
+    };
+
+
+    // Lancement au démarrage
+    document.addEventListener('DOMContentLoaded', () => {
+        render();
+    });
+
+</script>
+
+</body>
+</html>

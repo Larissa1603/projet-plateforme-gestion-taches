@@ -415,8 +415,8 @@
                     <b>${taskNameDisplay}</b><br>
                     <small style="display: block; margin-top: 5px;">${escapeHtml(task.description)}</small>
                 </td>
-                <td><span class="badge">${task.type}</span></td>
                 <td>${escapeHtml(task.creator)}</td>
+                <td><span class="badge">${task.type}</span></td>
                 <td>${task.startDate || 'N/A'}</td>
                 <td>${task.endDate || 'N/A'}</td>
                 <td><span class="${statusClass} status-badge">${statusText}</span></td>
@@ -519,4 +519,5 @@
 </script>
 
 </body>
+
 </html>
